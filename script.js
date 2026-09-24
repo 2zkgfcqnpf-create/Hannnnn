@@ -14,6 +14,7 @@
   const formStatus = document.getElementById("form-status");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   const sceneOrder = ["home", "solutions", "cases", "about", "contact"];
+  const chargeDuration = 4200;
 
   const sceneConfig = {
     home: {
@@ -99,17 +100,18 @@
     height: 0,
     dpr: 1,
     burst: 0.48,
+    chargeStartedAt: performance.now() - chargeDuration,
     lastTime: performance.now(),
     lastDrawnAt: 0,
     reducedMotion: reducedMotion.matches,
   };
 
-  const frameInterval = 1000 / 12;
+  const frameInterval = 1000 / 30;
 
   function resize() {
     state.width = window.innerWidth;
     state.height = window.innerHeight;
-    state.dpr = 1;
+    state.dpr = Math.min(1.5, window.devicePixelRatio || 1);
     canvas.width = Math.round(state.width * state.dpr);
     canvas.height = Math.round(state.height * state.dpr);
     canvas.style.width = `${state.width}px`;
@@ -154,46 +156,76 @@
     ctx.beginPath();
     ctx.moveTo(points[0].x, points[0].y);
     for (let index = 1; index < points.length; index += 1) {
-      const point = points[index];
-      const previous = points[index - 1];
-      ctx.quadraticCurveTo(previous.x, previous.y, (previous.x + point.x) * 0.5, (previous.y + point.y) * 0.5);
+      ctx.lineTo(points[index].x, points[index].y);
     }
-    const last = points[points.length - 1];
-    ctx.lineTo(last.x, last.y);
   }
 
-  function drawPulse(points, metrics, head, strength, tailLength) {
+  function chargeEnergyAt(time) {
+    if (state.reducedMotion) return 0;
+    const elapsed = time - state.chargeStartedAt;
+    if (elapsed < 0 || elapsed >= chargeDuration) return 0;
+    const attack = Math.min(1, elapsed / 240);
+    const decayProgress = Math.max(0, Math.min(1, (elapsed - 1100) / (chargeDuration - 1100)));
+    const decay = 1 - decayProgress * decayProgress * (3 - 2 * decayProgress);
+    return Math.max(0, attack * decay);
+  }
+
+  function trailPoints(points, metrics, start, end) {
+    const trail = [{ ...pointAt(points, metrics, start), progress: start }];
+    let travelled = 0;
+    metrics.lengths.forEach((length, index) => {
+      travelled += length;
+      const progress = travelled / Math.max(1, metrics.total);
+      if (progress > start && progress < end) {
+        trail.push({ ...points[index + 1], progress });
+      }
+    });
+    trail.push({ ...pointAt(points, metrics, end), progress: end });
+    return trail;
+  }
+
+  function drawPulse(points, metrics, head, strength, tailLength, _time, _routeIndex, chargeEnergy) {
     const normalizedHead = ((head % 1) + 1) % 1;
-    const trailStart = Math.max(0, normalizedHead - tailLength);
-    const trail = [];
-    for (let index = 0; index <= 10; index += 1) {
-      const progress = trailStart + ((normalizedHead - trailStart) * index) / 10;
-      trail.push(pointAt(points, metrics, progress));
-    }
+    const liveTail = Math.min(0.28, tailLength * 1.75 + 0.045 + chargeEnergy * 0.018);
+    const trailStart = Math.max(0, normalizedHead - liveTail);
+    const trail = trailPoints(points, metrics, trailStart, normalizedHead);
     if (trail.length < 2) return;
 
     ctx.save();
     ctx.globalCompositeOperation = "screen";
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.lineWidth = 5 + strength * 2.4;
-    ctx.strokeStyle = `rgba(23, 105, 255, ${0.1 + strength * 0.075})`;
-    traceRoute(trail);
-    ctx.stroke();
-    ctx.lineWidth = 2.2 + strength * 1.2;
-    ctx.strokeStyle = `rgba(24, 221, 236, ${0.25 + strength * 0.18})`;
-    traceRoute(trail);
-    ctx.stroke();
-    ctx.lineWidth = 1 + strength * 0.72;
-    ctx.strokeStyle = `rgba(238, 255, 255, ${0.64 + Math.min(strength, 1.4) * 0.23})`;
-    traceRoute(trail.slice(8));
-    ctx.stroke();
+    for (let index = 0; index < trail.length - 1; index += 1) {
+      const start = trail[index];
+      const end = trail[index + 1];
+      const startRatio = (start.progress - trailStart) / Math.max(0.001, normalizedHead - trailStart);
+      const endRatio = (end.progress - trailStart) / Math.max(0.001, normalizedHead - trailStart);
+      const glowGradient = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
+      glowGradient.addColorStop(0, `rgba(30, 134, 255, ${0.006 + startRatio * startRatio * (0.042 + strength * 0.014)})`);
+      glowGradient.addColorStop(1, `rgba(31, 213, 232, ${0.006 + endRatio * endRatio * (0.042 + strength * 0.014)})`);
+      ctx.lineWidth = 2.2 + chargeEnergy * 0.35;
+      ctx.strokeStyle = glowGradient;
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.stroke();
+
+      const coreGradient = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
+      coreGradient.addColorStop(0, `rgba(89, 207, 255, ${startRatio * startRatio * (0.02 + strength * 0.026)})`);
+      coreGradient.addColorStop(1, `rgba(218, 255, 255, ${endRatio * endRatio * (0.22 + strength * 0.085 + chargeEnergy * 0.05)})`);
+      ctx.lineWidth = 0.55 + endRatio * 0.38;
+      ctx.strokeStyle = coreGradient;
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.stroke();
+    }
 
     const tip = trail[trail.length - 1];
-    const glowRadius = 15 + strength * 11;
+    const glowRadius = 4.5 + strength * 1.35 + chargeEnergy * 1.5;
     const glow = ctx.createRadialGradient(tip.x, tip.y, 0, tip.x, tip.y, glowRadius);
-    glow.addColorStop(0, `rgba(250, 255, 255, ${Math.min(1, 0.72 * strength)})`);
-    glow.addColorStop(0.2, `rgba(52, 228, 236, ${0.34 * strength})`);
+    glow.addColorStop(0, `rgba(248, 255, 255, ${Math.min(0.78, 0.42 + strength * 0.12 + chargeEnergy * 0.08)})`);
+    glow.addColorStop(0.22, `rgba(79, 229, 238, ${0.14 + strength * 0.035})`);
     glow.addColorStop(1, "rgba(32, 96, 255, 0)");
     ctx.fillStyle = glow;
     ctx.beginPath();
@@ -205,12 +237,11 @@
   function drawCore(config, time, strength) {
     const x = config.pulse[0] * state.width;
     const y = config.pulse[1] * state.height;
-    const breathe = state.reducedMotion ? 1 : 0.86 + Math.sin(time * 0.004) * 0.14;
-    const radius = (28 + state.burst * 46 + config.depth * 3) * breathe;
+    const radius = 18 + state.burst * 10 + config.depth * 1.5;
     const glow = ctx.createRadialGradient(x, y, 0, x, y, radius);
-    glow.addColorStop(0, `rgba(247, 255, 255, ${0.25 + state.burst * 0.4})`);
-    glow.addColorStop(0.14, `rgba(54, 226, 235, ${0.15 + state.burst * 0.24})`);
-    glow.addColorStop(0.55, `rgba(40, 106, 255, ${0.045 + strength * 0.024})`);
+    glow.addColorStop(0, `rgba(234, 255, 255, ${0.1 + state.burst * 0.09})`);
+    glow.addColorStop(0.16, `rgba(54, 226, 235, ${0.07 + state.burst * 0.055})`);
+    glow.addColorStop(0.55, `rgba(40, 106, 255, ${0.018 + strength * 0.008})`);
     glow.addColorStop(1, "rgba(25, 72, 205, 0)");
     ctx.save();
     ctx.globalCompositeOperation = "screen";
@@ -223,11 +254,11 @@
 
   function draw(time) {
     const config = sceneConfig[state.view];
-    const delta = Math.min(40, time - state.lastTime);
     state.lastTime = time;
-    state.burst = Math.max(0, state.burst - delta * (state.reducedMotion ? 0.004 : 0.00072));
+    const chargeEnergy = chargeEnergyAt(time);
+    state.burst = state.reducedMotion ? 0.2 : chargeEnergy;
     ctx.clearRect(0, 0, state.width, state.height);
-    const strength = config.intensity + state.burst * 0.7;
+    const strength = config.intensity + chargeEnergy * 0.86;
 
     config.routes.forEach((route, routeIndex) => {
       const points = pointsForRoute(route);
@@ -236,15 +267,15 @@
       ctx.globalCompositeOperation = "screen";
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.lineWidth = state.view === "contact" ? 1.25 : 1.05;
-      ctx.strokeStyle = `rgba(36, 160, 226, ${0.03 + strength * 0.026})`;
+      ctx.lineWidth = 0.55;
+      ctx.strokeStyle = `rgba(36, 160, 226, ${0.012 + strength * 0.009})`;
       traceRoute(points);
       ctx.stroke();
       ctx.restore();
 
-      const speed = state.reducedMotion ? 0 : config.speed + routeIndex * 0.000004;
+      const speed = state.reducedMotion ? 0 : Math.min(0.00048, config.speed * 2.4 + 0.00007 + routeIndex * 0.000006);
       const head = time * speed + routeIndex * 0.147;
-      drawPulse(points, metrics, head, strength, config.tail);
+      drawPulse(points, metrics, head, strength, config.tail, time, routeIndex, chargeEnergy);
     });
 
     drawCore(config, time, strength);
@@ -262,6 +293,7 @@
     root.classList.remove("is-charging");
     void root.offsetWidth;
     root.classList.add("is-charging");
+    state.chargeStartedAt = performance.now();
     state.burst = state.reducedMotion ? 0.22 : 1;
   }
 
@@ -329,22 +361,31 @@
 
     const submitButton = leadForm.querySelector("button[type='submit']");
     submitButton.disabled = true;
+    submitButton.setAttribute("aria-busy", "true");
     submitButton.textContent = "提交中…";
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 12000);
     try {
       const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
-      if (!response.ok) throw new Error("submit failed");
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.message || "submit failed");
       leadForm.reset();
       formStatus.className = "is-success";
-      formStatus.textContent = "提交成功，我们会尽快与您联系。";
-    } catch (_error) {
+      formStatus.textContent = "已提交成功，我们会尽快与您联系。";
+    } catch (error) {
       formStatus.className = "is-error";
-      formStatus.textContent = "暂未提交成功，请拨打 151 0151 2159。";
+      formStatus.textContent = error.name === "AbortError"
+        ? "提交超时，请稍后重试或拨打 1324 0000 716。"
+        : "暂未提交成功，请稍后重试或拨打 1324 0000 716。";
     } finally {
+      window.clearTimeout(timeout);
       submitButton.disabled = false;
+      submitButton.removeAttribute("aria-busy");
       submitButton.textContent = "提交咨询";
     }
   }

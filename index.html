@@ -6,10 +6,10 @@
     <meta name="theme-color" content="#020407" />
     <meta name="description" content="TokenVolt 企业级大模型服务：主流模型 API、专属资源池、私有化部署，以及可观测、可治理的稳定 Token 供给。" />
     <title>TokenVolt｜企业级大模型与 Token 服务</title>
-    <link rel="stylesheet" href="./styles.css?v=20260923-1012" />
+    <link rel="stylesheet" href="./styles.css?v=20260924-1125" />
   </head>
   <body>
-    <main id="experience" class="experience" data-view="home" data-lead-endpoint="">
+    <main id="experience" class="experience" data-view="home" data-lead-endpoint="./api/leads">
       <h1 class="sr-only">TokenVolt 企业级大模型与 Token 服务</h1>
 
       <header class="site-header">
@@ -79,7 +79,11 @@
                     <h3>标准模型 API</h3>
                     <p>统一 API、鉴权、限流、账单和用量分析，覆盖文本、推理、代码、图像与视频生成等主流模型能力。</p>
                     <div class="model-cloud" aria-label="支持的主流模型">
-                      <span>DeepSeek</span><span>智谱 GLM</span><span>月之暗面 K3</span><span>Seedance</span><span>更多主流模型</span>
+                      <span><img src="./assets/model-deepseek.svg" alt="" aria-hidden="true" />DeepSeek</span>
+                      <span><img src="./assets/model-zhipu.svg" alt="" aria-hidden="true" />智谱 GLM</span>
+                      <span><img src="./assets/model-kimi.svg" alt="" aria-hidden="true" />月之暗面 K3</span>
+                      <span><img src="./assets/model-seedance.svg" alt="" aria-hidden="true" />Seedance</span>
+                      <span class="model-cloud__more" aria-label="更多主流模型">更多主流模型</span>
                     </div>
                     <div class="billing-line"><b>灵活计费</b><span>按量后付</span><span>余额预存</span><span>多账户统一结算</span></div>
                     <div class="discount-block">
@@ -137,7 +141,7 @@
                   <span>TPM：Tokens Per Minute，每分钟处理 Token 数</span>
                 </section>
                 <section class="proof-stat">
-                  <strong>99.1<small>%</small></strong>
+                  <strong>98<small class="proof-stat__unit--spaced">%+</small></strong>
                   <h3>训练任务集群月度 ETTR</h3>
                   <p>以月度有效训练时长占比衡量集群可用效率，覆盖故障恢复、任务调度与资源利用的综合运营表现。</p>
                   <span>ETTR：Effective Training Time Ratio，有效训练时长占比</span>
@@ -150,14 +154,29 @@
                   <a class="partner-card partner-card--zhipu" href="https://www.zhipuai.cn/zh" target="_blank" rel="noopener noreferrer" aria-label="访问智谱官网">
                     <img src="./assets/partner-zhipu.svg" alt="智谱" /><span>模型与平台生态</span>
                   </a>
-                  <a class="partner-card partner-card--mobile" href="https://ecloud.10086.cn/mobilecloud" target="_blank" rel="noopener noreferrer" aria-label="访问中国移动移动云官网">
-                    <img src="./assets/partner-china-mobile.svg" alt="中国移动｜移动云" /><span>云与算力服务</span>
-                  </a>
                   <a class="partner-card partner-card--infini" href="https://www.infinigence-ai.com/" target="_blank" rel="noopener noreferrer" aria-label="访问无问芯穹官网">
                     <img src="./assets/partner-infinigence.svg" alt="无问芯穹" /><span>AI 基础设施</span>
                   </a>
                   <a class="partner-card partner-card--centlt" href="https://www.centlt.com/cn/" target="_blank" rel="noopener noreferrer" aria-label="访问世纪利通官网">
                     <img src="./assets/partner-centlt.png" alt="世纪利通" /><span>全栈算力解决方案</span>
+                  </a>
+                  <a class="partner-card partner-card--volcengine" href="https://www.volcengine.com/" target="_blank" rel="noopener noreferrer" aria-label="访问火山引擎官网">
+                    <img src="./assets/partner-volcengine-official.svg" alt="火山引擎" /><span>云与 AI 服务</span>
+                  </a>
+                  <a class="partner-card partner-card--tencent" href="https://cloud.tencent.com/" target="_blank" rel="noopener noreferrer" aria-label="访问腾讯云官网">
+                    <img src="./assets/partner-tencent-cloud.png" alt="腾讯云" /><span>云与 AI 服务</span>
+                  </a>
+                  <a class="partner-card partner-card--baidu" href="https://cloud.baidu.com/" target="_blank" rel="noopener noreferrer" aria-label="访问百度智能云官网">
+                    <img src="./assets/partner-baidu-ai-cloud.png" alt="百度智能云" /><span>云与 AI 服务</span>
+                  </a>
+                  <a class="partner-card partner-card--cloud partner-card--mobile" href="https://ecloud.10086.cn/mobilecloud" target="_blank" rel="noopener noreferrer" aria-label="访问移动云官网">
+                    <img src="./assets/partner-mobile-cloud-color.png" alt="移动云" /><span>云与算力服务</span>
+                  </a>
+                  <a class="partner-card partner-card--cloud partner-card--unicom" href="https://www.cucloud.cn/" target="_blank" rel="noopener noreferrer" aria-label="访问联通云官网">
+                    <img src="./assets/partner-unicom-cloud-white.png" alt="联通云" /><span>云与算力服务</span>
+                  </a>
+                  <a class="partner-card partner-card--cloud partner-card--tianyi" href="https://www.ctyun.cn/" target="_blank" rel="noopener noreferrer" aria-label="访问天翼云官网">
+                    <img src="./assets/partner-tianyi-cloud.png" alt="天翼云" /><span>云与算力服务</span>
                   </a>
                 </div>
                 <p class="data-note">以上指标为历史运营表现，用于说明既有工程能力，不构成对未来结果的单独承诺。</p>
@@ -175,7 +194,7 @@
                 <div class="team-statement">
                   <span>团队能力</span>
                   <h3>从算力、模型到在线服务的完整交付经验</h3>
-                  <p>团队成员来自滴滴出行、字节跳动、百度等大型科技企业，具备大规模在线系统、模型推理、异构算力、平台工程与 SRE 的长期实践。我们以工程确定性连接模型能力与真实业务，并覆盖模型选型与评测、推理服务优化、集群与网络、服务治理、稳定性运营和企业系统集成。</p>
+                  <p>团队成员来自字节火山、腾讯、百度、滴滴出行等大型科技企业，具备大规模在线系统、模型推理、异构算力、平台工程与 SRE 的长期实践。我们以工程确定性连接模型能力与真实业务，并覆盖模型选型与评测、推理服务优化、集群与网络、服务治理、稳定性运营和企业系统集成。</p>
                   <div class="competency-list"><b>模型工程</b><b>异构算力</b><b>平台治理</b><b>SRE</b></div>
                 </div>
               </div>
@@ -200,7 +219,7 @@
                 <h2>联系方式</h2>
                 <p class="contact-lead">告诉我们模型、用量和部署边界，TokenVolt 将提供针对性的服务与成本方案。</p>
                 <address>
-                  <div><span>商务联系人</span><b>Jasper 王先生</b></div>
+                  <div><span>商务联系人</span><b>曹先生</b></div>
                   <div><span>联系电话</span><a href="tel:13240000716">1324 0000 716</a></div>
                   <div><span>办公地址</span><b>北京市顺义区安泰大街<br />9号院4号楼9层906</b></div>
                 </address>
@@ -230,6 +249,6 @@
       <div class="film-grain" aria-hidden="true"></div>
       <div class="edge-vignette" aria-hidden="true"></div>
     </main>
-    <script src="./script.js?v=20260922-2145"></script>
+    <script src="./script.js?v=20260923-2315"></script>
   </body>
 </html>
